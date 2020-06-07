@@ -5,38 +5,51 @@ from PyQt5.QtMultimedia import *
 import sys, time, traceback
 
 
-class Obj(QObject):
-	"""
-	Criação de sinais disponíveis para uma tarefa em thread:
-	terminado: sinal enviado sem mais informação, quando o processamento terminar
-	erro: tuple com informação sobre um eventual erro que possa surgir
-	resultado: qualquer coisa que resulte do processamento.
-	"""
-	terminado = pyqtSignal()
-	erro = pyqtSignal(tuple)
-	resultado = pyqtSignal(object)
+class Thread(QThread):
+	valor = pyqtSignal(int)
 
-
-class Tarefa(QRunnable):
-	def __init__(self, fn, *args, **kwargs):
-		super(Tarefa, self).__init__(*args, **kwargs)
-		self.fn = fn
-		self.args = args
-		self.kwargs = kwargs
-		self.sinais = Obj()
-
-	@pyqtSlot()
 	def run(self):
-		try:
-			resultado = self.fn(self.args, self.kwargs)
-		except:
-			traceback.print_exc()
-			tipo, valor = sys.exc_info()[:2]
-			self.sinais.erro.emit((tipo, valor, traceback.format_exc()))
-		else:
-			self.sinais.resultado.emit(resultado)
-		finally:
-			self.sinais.terminado.emit()
+		contagem = 0
+		while contagem <= 100:
+			contagem += 1
+			self.sleep(1)
+			self.valor.emit(contagem)
+
+
+class MainWindow(QDialog):
+	def __init__(self):
+		super().__init__()
+		self.title = "PyQt5 ProgressBar"
+		self.top = 200
+		self.left = 500
+		self.width = 300
+		self.height = 100
+		self.setWindowTitle(self.title)
+		self.setGeometry(self.left, self.top, self.width, self.height)
+		vbox = QVBoxLayout()
+		self.progressbar = QProgressBar()
+		# self.progressbar.setOrientation(Qt.Vertical)
+		self.progressbar.setMaximum(100)
+		self.progressbar.setStyleSheet("QProgressBar {border: 2px solid grey;border-radius:8px;padding:1px}"
+		                               "QProgressBar::chunk {background:yellow}")
+		# qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 red, stop: 1 white);
+		# self.progressbar.setStyleSheet("QProgressBar::chunk {background: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, stop: 0 red, stop: 1 white); }")
+		# self.progressbar.setTextVisible(False)
+		vbox.addWidget(self.progressbar)
+		self.button = QPushButton("Start Progressbar")
+		self.button.clicked.connect(self.startProgressBar)
+		self.button.setStyleSheet('background-color:yellow')
+		vbox.addWidget(self.button)
+		self.setLayout(vbox)
+		self.show()
+
+	def startProgressBar(self):
+		self.thread = Thread()
+		self.thread.valor.connect(self.mostrar_progresso)
+		self.thread.start()
+
+	def mostrar_progresso(self, valor):
+		self.progressbar.setValue(valor)
 
 
 if __name__ == '__main__':

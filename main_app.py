@@ -4,7 +4,7 @@ from PyQt5.QtGui import *
 import sys
 from calendario import Calendario
 from cores import Cores
-from matematica import Matematica, Contar
+from matematica import Matematica
 
 
 class App(QMainWindow):
@@ -53,9 +53,13 @@ class App(QMainWindow):
 		self.icons['calendario'].triggered.connect(self.tarefa_calendario)
 		self.icons['cores'].triggered.connect(self.tarefa_cores)
 		self.icons['calculadora'].triggered.connect(self.tarefa_calculadora)
+		self.icons['culinaria'].triggered.connect(self.tarefa_culinaria)
+
+	def tarefa_culinaria(self):
+		pass
 
 	def tarefa_calculadora(self):
-		self.calc = Matematica()
+		self.calc = Matematica(self)
 		self.setCentralWidget(self.calc)
 
 	def tarefa_calendario(self):
@@ -65,6 +69,7 @@ class App(QMainWindow):
 	def tarefa_cores(self):
 		self.cor = Cores()
 		self.setCentralWidget(self.cor)
+
 
 raiz = QApplication(sys.argv)
 app = App()
