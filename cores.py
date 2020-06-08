@@ -2,27 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import *
-import sys, random, time, string, threading
-
-
-class DizerCor(QThread):
-	def __init__(self, cor, lingua, parent=None):
-		super(DizerCor, self).__init__(parent)
-		self.cor = cor.lower()
-		self.lingua = lingua
-
-	def __del__(self):
-		self.wait()
-
-	def run(self):
-		print(self.cor, self.lingua, sep='\n')
-		if self.lingua == 'english':
-			self.som = QSound("Sounds/Idiomas/English/" + self.cor + ".wav")
-		elif self.lingua == 'castelhano':
-			self.som = QSound("Sounds/Idiomas/Castelhano/" + self.cor + ".wav")
-		else:
-			self.som = QSound("Sounds/Idiomas/Portugues/" + self.cor + ".wav")
-		self.som.play()
+import sys, string
 
 
 class Cores(QWidget):
@@ -177,27 +157,7 @@ class Cores(QWidget):
 			s.play()
 			return
 		self.sender().stop()
-		QSound("Sounds/Idiomas/Portugues.wav", self).play()
-		cor_ingles = DizerCor(self.labels[0].text().split()[1], 'english', self)
-		#cor_ingles.finished.connect(self.timers[1].start(2000))
-		cor_ingles.finished.connect(self.ola)
-		cor_ingles.start()
-		#t = threading.Thread(target=self.dizer_ingles, args=(self.labels[0].text(), 'english'))
-		#t.start()
-		#t.join()
-		self.timers[1].start(2000)
-	def ola(self):
-		print("Olá")
-
-	def dizer_ingles(self, cor: str, lingua: str):
-		cor = cor.lower()
-		if lingua == 'english':
-			som = QSound("Sounds/Idiomas/English/" + cor + ".wav", self)
-		elif lingua == 'castelhano':
-			som = QSound("Sounds/Idiomas/Castelhano/" + cor + ".wav", self)
-		else:
-			som = QSound("Sounds/Idiomas/Portugues/" + cor + ".wav", self)
-		som.play()
+		self.dizer_cor(self.labels[0].text().split()[1], 'english')
 
 	def escrever_castelhano(self, cor: str):
 		for l, s in zip(cor, self.sons_gerados['castelhano']):
@@ -205,6 +165,7 @@ class Cores(QWidget):
 			s.play()
 			return
 		self.sender().stop()
+		self.dizer_cor(self.labels[2].text().split()[1], 'castelhano')
 
 	def escrever_portugues(self, cor: str):
 		for l, s in zip(cor, self.sons_gerados['portugues']):
@@ -212,5 +173,30 @@ class Cores(QWidget):
 			s.play()
 			return
 		self.sender().stop()
-		QSound("Sounds/Idiomas/Castelhano.wav", self).play()
-		self.timers[2].start(2000)
+		self.dizer_cor(self.labels[1].text().split()[1], 'portugues')
+
+	def dizer_cor(self, cor: str, lingua: str):
+		cor = cor.lower()
+		self.next_lingua = None
+		if lingua == 'english':
+			self.som = QSoundEffect()
+			self.som.setSource(QUrl.fromLocalFile("Sounds/Idiomas/English/" + cor + ".wav"))
+			self.som.play()
+			self.next_lingua = QSoundEffect()
+			self.next_lingua.setSource(QUrl.fromLocalFile("Sounds/Idiomas/Portugues.wav"))
+			self.next_lingua.playingChanged.connect(lambda: self.timers[1].start(2000))
+		elif lingua == 'castelhano':
+			self.next_lingua = None
+			self.som = QSoundEffect()
+			self.som.setSource(QUrl.fromLocalFile("Sounds/Idiomas/Castelhano/" + cor + ".wav"))
+		else:
+			self.som = QSoundEffect()
+			self.som.setSource(QUrl.fromLocalFile("Sounds/Idiomas/Portugues/" + cor + ".wav"))
+			self.next_lingua = QSoundEffect()
+			self.next_lingua.setSource(QUrl.fromLocalFile("Sounds/Idiomas/Castelhano.wav"))
+			self.next_lingua.playingChanged.connect(lambda: self.timers[2].start(2000))
+		if self.next_lingua != None:
+			self.som.play()
+			self.som.playingChanged.connect(self.next_lingua.play)
+		else:
+			self.som.play()
