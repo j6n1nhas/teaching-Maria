@@ -59,7 +59,7 @@ class App(QMainWindow):
 		pass
 
 	def tarefa_calculadora(self):
-		self.calc = Matematica(self)
+		self.calc = Matematica()
 		self.setCentralWidget(self.calc)
 
 	def tarefa_calendario(self):
@@ -71,6 +71,7 @@ class App(QMainWindow):
 		self.setCentralWidget(self.cor)
 
 
-raiz = QApplication(sys.argv)
-app = App()
-raiz.exec_()
+if __name__ == '__main__':
+	raiz = QApplication(sys.argv)
+	app = App()
+	raiz.exec_()
